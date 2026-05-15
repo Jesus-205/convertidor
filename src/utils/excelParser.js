@@ -128,73 +128,68 @@ function buildColumnMap(headerRow) {
 }
 
 /**
- * Extracts product-level info from the info row (name, class, category, density).
+ * Extracts product-level info from the info row using POSITIONAL logic.
+ * 
+ * The info row cells (non-empty) are always in this order:
+ *   1. Product Name
+ *   2. Class (e.g. Liquor, Wine, Tequila)
+ *   3. Category (e.g. Shake, Red Wine, Blanco)
+ *   4. Density (e.g. "94.67 g / 100-mL")
+ * 
+ * Some cells may be missing, so we first identify density by its 
+ * unique pattern, then assign the rest by position.
  */
 function extractProductInfo(infoRow) {
-  let productName = '';
-  let clase = '';
-  let categoria = '';
-  let densidad = 0;
-
   const infoValues = (infoRow || []).map((c) => String(c).trim());
 
-  // First non-empty cell is the product name
+  // Collect all non-empty, meaningful cells with their original indices
+  const nonEmpty = [];
   for (let j = 0; j < infoValues.length; j++) {
     const val = infoValues[j];
-    if (val && val.length > 1) {
-      productName = val;
+    if (val && val.length > 0 && val !== '-' && val !== '0') {
+      nonEmpty.push({ index: j, value: val });
+    }
+  }
+
+  // 1. Find and extract density (most reliably detectable by pattern)
+  let densidad = 0;
+  let densityEntryIdx = -1;
+  for (let i = 0; i < nonEmpty.length; i++) {
+    const val = nonEmpty[i].value;
+    // Match patterns like "98 g / 100 ml", "94.67 g / 100-mL", etc.
+    const match = val.match(/(\d+(?:\.\d+)?)\s*g\s*\/\s*\d+[-\s]*m[lL]/);
+    if (match) {
+      densidad = parseFloat(match[1]);
+      densityEntryIdx = i;
+      break;
+    }
+    // Fallback: any cell with "g / ... ml"
+    if (/\d+.*g\s*\/.*m[lL]/i.test(val)) {
+      const fb = val.match(/(\d+(?:\.\d+)?)/);
+      if (fb) densidad = parseFloat(fb[1]);
+      densityEntryIdx = i;
       break;
     }
   }
 
-  for (let j = 0; j < infoValues.length; j++) {
-    const val = infoValues[j];
-    const lower = val.toLowerCase();
+  // 2. Remove density from the list, leaving: [Name, Class, Category, ...]
+  const remaining = nonEmpty.filter((_, i) => i !== densityEntryIdx);
 
-    // Skip the product name we already found
-    if (val === productName && j === infoValues.indexOf(productName)) continue;
+  // 3. Assign by position
+  const productName = remaining.length > 0 ? remaining[0].value : '';
+  const clase = remaining.length > 1 ? remaining[1].value : 'Miscellaneous';
+  const categoria = remaining.length > 2 ? remaining[2].value : 'General';
 
-    // Detect density pattern: "98 g / 100 ml"
-    const densityMatch = val.match(/(\d+(?:\.\d+)?)\s*g\s*\/\s*\d+\s*m[lL]/);
-    if (densityMatch) {
-      densidad = parseFloat(densityMatch[1]);
-      continue;
-    }
-
-    // Detect class
-    const classNames = [
-      'wine', 'liquor', 'beer', 'champagne', 'brandy', 'bourbon',
-      'tequila', 'vodka', 'rum', 'whiskey', 'whisky', 'gin', 'mezcal',
-      'cognac', 'scotch', 'sake',
-    ];
-    if (classNames.includes(lower)) {
-      clase = capitalizeFirst(lower);
-      continue;
-    }
-
-    // Detect category keywords
-    const categoryKeywords = [
-      'red wine', 'white wine', 'rose wine', 'rosé wine', 'sparkling',
-      'imported', 'domestic', 'blanco', 'reposado', 'añejo', 'cristalino',
-      'extra añejo', 'joven',
-    ];
-    const isCategory = categoryKeywords.some((kw) => lower.includes(kw));
-    if (isCategory) {
-      categoria = val;
-      continue;
-    }
-
-    // If we found class but no category yet, and this isn't a known skip word
-    if (clase && !categoria && val && val !== productName) {
-      const skipWords = ['unknown', 'default', 'imported', 'domestic'];
-      if (!skipWords.includes(lower)) {
-        categoria = val;
-      }
-    }
+  // Log first few for debugging (visible in browser console)
+  if (typeof window !== 'undefined' && window.__excelParserDebugCount === undefined) {
+    window.__excelParserDebugCount = 0;
   }
-
-  if (!clase) clase = 'Miscellaneous';
-  if (!categoria) categoria = 'General';
+  if (typeof window !== 'undefined' && window.__excelParserDebugCount < 5) {
+    console.log('[Parser Debug] Info row:', infoValues);
+    console.log('[Parser Debug] Non-empty cells:', remaining.map(r => r.value));
+    console.log('[Parser Debug] → Name:', productName, '| Clase:', clase, '| Cat:', categoria, '| Densidad:', densidad);
+    window.__excelParserDebugCount++;
+  }
 
   return { productName, clase, categoria, densidad };
 }
