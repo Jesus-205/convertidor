@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Upload, FileDown, RefreshCcw, FileSpreadsheet, CheckCircle2, AlertCircle, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseExcel, exportToExcel } from './utils/excelParser';
+import useSound from 'use-sound';
 import './App.css';
 
 function App() {
