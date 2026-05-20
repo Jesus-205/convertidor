@@ -121,7 +121,7 @@ function App() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <CheckCircle2 style={{ color: '#10b981' }} />
-                  <h2 style={{ fontSize: '1.5rem' }}>Conversión Exitosa</h2>
+                  <h2 style={{ fontSize: '1.5rem' }}>Conversión exitosa</h2>
                 </div>
                 <p style={{ color: '#9ca3af' }}>
                   {searchTerm ? `${filteredData.length} de ${data.length}` : `${data.length}`} registros
