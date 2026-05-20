@@ -2,6 +2,7 @@ import React, { useState, useRef, useMemo } from 'react';
 import { Upload, FileDown, RefreshCcw, FileSpreadsheet, CheckCircle2, AlertCircle, Search } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseExcel, exportToExcel } from './utils/excelParser';
+import './App.css';
 
 function App() {
   const [data, setData] = useState([]);
@@ -63,7 +64,7 @@ function App() {
   return (
     <div className="container">
       <header>
-        <motion.h1 
+        <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
         >
@@ -95,12 +96,12 @@ function App() {
               </div>
               <h2>{loading ? 'Procesando...' : 'Arrastra tu archivo aquí'}</h2>
               <p>O haz clic para seleccionar un archivo Excel de tu equipo</p>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={onFileChange} 
-                accept=".xlsx, .xls" 
-                style={{ display: 'none' }} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={onFileChange}
+                accept=".xlsx, .xls"
+                style={{ display: 'none' }}
               />
               {error && (
                 <div style={{ marginTop: '1.5rem', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
