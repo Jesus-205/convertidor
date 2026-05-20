@@ -166,7 +166,7 @@ function App() {
                       {filteredData.length === 0 ? (
                         <tr>
                           <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
-                            No se encontraron resultados para "{searchTerm}"
+                            No se encontraron registros para "{searchTerm}"
                           </td>
                         </tr>
                       ) : (
